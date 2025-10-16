@@ -98,11 +98,13 @@
 // Função utilitária para limpar o buffer de entrada do teclado (stdin), evitando problemas com leituras consecutivas de scanf e getchar.
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
-#define MAX_TERRITORIOS 5
 #define MAX_NOME 50
 #define MAX_COR 30
+#define TOTAL_TERRITORIOS 5
 
 typedef struct {
     char nome[MAX_NOME];
@@ -110,34 +112,107 @@ typedef struct {
     int tropas;
 } Territorio;
 
-int main() {
-    Territorio mapa[MAX_TERRITORIOS];
-
-    printf("Cadastro dos Territórios:\n");
-    for (int i = 0; i < MAX_TERRITORIOS; i++) {
+// Cadastro dos territórios
+void cadastrarTerritorios(Territorio *mapa, int n) {
+    for (int i = 0; i < n; i++) {
         printf("\nTerritório %d\n", i+1);
 
         printf("Nome: ");
         fgets(mapa[i].nome, MAX_NOME, stdin);
-        mapa[i].nome[strcspn(mapa[i].nome, "\n")] = '\0'; // Remove o '\n'
+        mapa[i].nome[strcspn(mapa[i].nome, "\n")] = '\0';
 
         printf("Cor do Exército: ");
         fgets(mapa[i].cor, MAX_COR, stdin);
-        mapa[i].cor[strcspn(mapa[i].cor, "\n")] = '\0'; // Remove o '\n'
+        mapa[i].cor[strcspn(mapa[i].cor, "\n")] = '\0';
 
         printf("Número de Tropas: ");
         scanf("%d", &mapa[i].tropas);
-        getchar(); // Limpa o '\n' do buffer
+        getchar(); // limpa buffer
     }
+}
 
+// Exibe estado do mapa
+void exibirMapa(Territorio *mapa, int n) {
     printf("\nEstado atual do mapa:\n");
     printf("--------------------------------------\n");
-    printf("| %-20s | %-10s | %-6s |\n", "Nome", "Cor", "Tropas");
+    printf("| %-2s | %-20s | %-10s | %-6s |\n", "ID", "Nome", "Cor", "Tropas");
     printf("--------------------------------------\n");
-    for (int i = 0; i < MAX_TERRITORIOS; i++) {
-        printf("| %-20s | %-10s | %-6d |\n", mapa[i].nome, mapa[i].cor, mapa[i].tropas);
+    for (int i = 0; i < n; i++) {
+        printf("| %-2d | %-20s | %-10s | %-6d |\n", i+1, mapa[i].nome, mapa[i].cor, mapa[i].tropas);
     }
     printf("--------------------------------------\n");
+}
 
+// Simula ataque entre dois territórios
+void atacar(Territorio *mapa, int atacante, int defensor) {
+    if (mapa[atacante].tropas < 1) {
+        printf("O território atacante não possui tropas suficientes para atacar.\n");
+        return;
+    }
+    if (mapa[defensor].tropas < 1) {
+        printf("O território defensor já não possui tropas!\n");
+        return;
+    }
+
+    int dadoAtacante = rand() % 6 + 1; // 1 a 6
+    int dadoDefensor = rand() % 6 + 1;
+
+    printf("\nAtaque: %s (Cor: %s) VS %s (Cor: %s)\n", 
+        mapa[atacante].nome, mapa[atacante].cor, mapa[defensor].nome, mapa[defensor].cor);
+    printf("Dado atacante: %d\n", dadoAtacante);
+    printf("Dado defensor: %d\n", dadoDefensor);
+
+    if (dadoAtacante >= dadoDefensor) {
+        printf("O atacante venceu!\n");
+        mapa[defensor].tropas--;
+        if (mapa[defensor].tropas <= 0) {
+            mapa[defensor].tropas = 1;
+            strcpy(mapa[defensor].cor, mapa[atacante].cor); // conquista
+            printf("O território %s foi conquistado pelo exército %s!\n", mapa[defensor].nome, mapa[atacante].cor);
+        }
+    } else {
+        printf("O defensor resistiu ao ataque!\n");
+        mapa[atacante].tropas--;
+    }
+}
+
+int main() {
+    srand(time(NULL));
+    Territorio *mapa = (Territorio*)calloc(TOTAL_TERRITORIOS, sizeof(Territorio));
+    if (!mapa) {
+        printf("Erro ao alocar memória!\n");
+        return 1;
+    }
+
+    printf("Cadastro dos territórios:\n");
+    cadastrarTerritorios(mapa, TOTAL_TERRITORIOS);
+
+    exibirMapa(mapa, TOTAL_TERRITORIOS);
+
+    char continuar = 's';
+    while (continuar == 's' || continuar == 'S') {
+        int atacante, defensor;
+        printf("\nEscolha o território atacante (1 a %d): ", TOTAL_TERRITORIOS);
+        scanf("%d", &atacante);
+        getchar();
+        printf("Escolha o território defensor (1 a %d): ", TOTAL_TERRITORIOS);
+        scanf("%d", &defensor);
+        getchar();
+
+        if (atacante < 1 || atacante > TOTAL_TERRITORIOS || defensor < 1 || defensor > TOTAL_TERRITORIOS || atacante == defensor) {
+            printf("Escolha inválida. Tente novamente.\n");
+            continue;
+        }
+
+        atacar(mapa, atacante - 1, defensor - 1);
+        exibirMapa(mapa, TOTAL_TERRITORIOS);
+
+        printf("\nDeseja realizar outro ataque? (s/n): ");
+        scanf(" %c", &continuar);
+        getchar();
+    }
+
+    free(mapa);
+    printf("Fim da simulação!\n");
     return 0;
 }
