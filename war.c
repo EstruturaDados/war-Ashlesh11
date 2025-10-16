@@ -31,7 +31,7 @@
 
 // --- Função Principal (main) ---
 // Função principal que orquestra o fluxo do jogo, chamando as outras funções em ordem.
-int main() {
+
     // 1. Configuração Inicial (Setup):
     // - Define o locale para português.
     // - Inicializa a semente para geração de números aleatórios com base no tempo atual.
@@ -51,8 +51,8 @@ int main() {
     // 3. Limpeza:
     // - Ao final do jogo, libera a memória alocada para o mapa para evitar vazamentos de memória.
 
-    return 0;
-}
+    //return 0;
+
 
 // --- Implementação das Funções ---
 
@@ -96,3 +96,48 @@ int main() {
 
 // limparBufferEntrada():
 // Função utilitária para limpar o buffer de entrada do teclado (stdin), evitando problemas com leituras consecutivas de scanf e getchar.
+
+#include <stdio.h>
+#include <string.h>
+
+#define MAX_TERRITORIOS 5
+#define MAX_NOME 50
+#define MAX_COR 30
+
+typedef struct {
+    char nome[MAX_NOME];
+    char cor[MAX_COR];
+    int tropas;
+} Territorio;
+
+int main() {
+    Territorio mapa[MAX_TERRITORIOS];
+
+    printf("Cadastro dos Territórios:\n");
+    for (int i = 0; i < MAX_TERRITORIOS; i++) {
+        printf("\nTerritório %d\n", i+1);
+
+        printf("Nome: ");
+        fgets(mapa[i].nome, MAX_NOME, stdin);
+        mapa[i].nome[strcspn(mapa[i].nome, "\n")] = '\0'; // Remove o '\n'
+
+        printf("Cor do Exército: ");
+        fgets(mapa[i].cor, MAX_COR, stdin);
+        mapa[i].cor[strcspn(mapa[i].cor, "\n")] = '\0'; // Remove o '\n'
+
+        printf("Número de Tropas: ");
+        scanf("%d", &mapa[i].tropas);
+        getchar(); // Limpa o '\n' do buffer
+    }
+
+    printf("\nEstado atual do mapa:\n");
+    printf("--------------------------------------\n");
+    printf("| %-20s | %-10s | %-6s |\n", "Nome", "Cor", "Tropas");
+    printf("--------------------------------------\n");
+    for (int i = 0; i < MAX_TERRITORIOS; i++) {
+        printf("| %-20s | %-10s | %-6d |\n", mapa[i].nome, mapa[i].cor, mapa[i].tropas);
+    }
+    printf("--------------------------------------\n");
+
+    return 0;
+}
